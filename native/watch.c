@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
     printf("Monitoring %s\n", argv[1]);
     CFStringRef path =
-        CFStringCreateWithCString(NULL, argv[1], kCFStringEncodingMacRoman);
+        CFStringCreateWithCString(NULL, argv[1], kCFStringEncodingUTF8);
     CFArrayRef pathsToWatch =
         CFArrayCreate(NULL, (const void **)&path, 1, NULL);
     void *callbackInfo = NULL;
@@ -56,6 +56,17 @@ int main(int argc, char **argv) {
         kFSEventStreamEventIdSinceNow, latency,
         kFSEventStreamCreateFlagNone | kFSEventStreamCreateFlagWatchRoot |
             kFSEventStreamCreateFlagFileEvents);
+
+
+    // This appears not to work, no matter what I try.
+    CFStringRef exclusion = CFStringCreateWithCString(NULL, "some-output", kCFStringEncodingUTF8);
+    CFArrayRef exclusions = CFArrayCreate(NULL, (const void **)&exclusion, 1, NULL);
+
+    if (!FSEventStreamSetExclusionPaths(stream, exclusions)) {
+      fprintf(stderr, "Failed to set exclusions.\n");
+    } else {
+      fprintf(stderr, "Set exclusions\n");
+    }
 
     CFRunLoopRef loop = CFRunLoopGetCurrent();
     CFRunLoopPerformBlock(loop, kCFRunLoopDefaultMode, ^(void) {
