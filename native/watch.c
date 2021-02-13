@@ -57,20 +57,25 @@ int main(int argc, char **argv) {
         kFSEventStreamCreateFlagNone | kFSEventStreamCreateFlagWatchRoot |
             kFSEventStreamCreateFlagFileEvents);
 
-
-    // This appears not to work, no matter what I try.
-    CFStringRef exclusion = CFStringCreateWithCString(NULL, "some-output", kCFStringEncodingUTF8);
-    CFArrayRef exclusions = CFArrayCreate(NULL, (const void **)&exclusion, 1, NULL);
-
-    if (!FSEventStreamSetExclusionPaths(stream, exclusions)) {
-      fprintf(stderr, "Failed to set exclusions.\n");
-    } else {
-      fprintf(stderr, "Set exclusions\n");
-    }
-
     CFRunLoopRef loop = CFRunLoopGetCurrent();
     CFRunLoopPerformBlock(loop, kCFRunLoopDefaultMode, ^(void) {
       FSEventStreamScheduleWithRunLoop(stream, loop, kCFRunLoopDefaultMode);
+
+      // This doesn't work
+  //    CFStringRef exclusion = CFStringCreateWithCString(NULL, "some-output", kCFStringEncodingUTF8);
+      // This does. The trailing slash is needed.
+      /// UUUUUUUUHHHH? Sometimes it works???
+      CFStringRef exclusion = CFStringCreateWithCString(NULL, "buck-out/", kCFStringEncodingUTF8);
+      CFArrayRef exclusions = CFArrayCreate(NULL, (const void **)&exclusion, 1, NULL);
+
+      if (!FSEventStreamSetExclusionPaths(stream, exclusions)) {
+        fprintf(stderr, "Failed to set exclusions.\n");
+      } else {
+        fprintf(stderr, "Set exclusions\n");
+      }
+      CFRelease(exclusions);
+
+
       FSEventStreamStart(stream);
     });
     CFRunLoopRun();
